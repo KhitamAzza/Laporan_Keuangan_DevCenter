@@ -1,4 +1,4 @@
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbz0nTZE3SEQuoyBQVWI83du_9uDIpu3qZE5gbsqDQgvVVTNhw2CJvbnM460fjP5K03mzg/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbzlPkZJaZhNQXLPRW8C0xWxB5WpbqqutIyW5rXq7JnvkgXyvxfbXnDKAVdARWNR82dUtw/exec';
 
 let userList = [];      // stores users + WA numbers
 let adminLogData = [];  // stores last fetched log for WA lookup
