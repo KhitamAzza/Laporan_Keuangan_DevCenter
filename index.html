@@ -14,24 +14,14 @@
   <!-- ═══ LANDING ═══ -->
   <div id="landingPage" class="page">
     <div class="landing-top">
-      <h1>Laporan Keuangan Development Center</h1>
-      <p class="landing-sub">SMK Diponegoro Tumpang</p>
+      <h1>💰 Audit Keuangan</h1>
+      <p class="landing-sub">Pondok Pesantren</p>
     </div>
 
-    <div class="stat-big">
-      <div class="stat-big-label">Saldo Saat Ini</div>
-      <div class="stat-big-value" id="saldoValue">Rp 0</div>
-    </div>
-
-    <div class="stat-row">
-      <div class="stat-small stat-green">
-        <div class="stat-small-label">Pemasukan</div>
-        <div class="stat-small-value" id="pemasukanValue">Rp 0</div>
-      </div>
-      <div class="stat-small stat-red">
-        <div class="stat-small-label">Pengeluaran</div>
-        <div class="stat-small-value" id="pengeluaranValue">Rp 0</div>
-      </div>
+    <!-- Only Pengeluaran shown to public -->
+    <div class="stat-big stat-red-public">
+      <div class="stat-big-label">Total Pengeluaran</div>
+      <div class="stat-big-value" id="pengeluaranPublicValue">Rp 0</div>
     </div>
 
     <div class="menu-list">
@@ -58,6 +48,15 @@
         <div class="menu-text">
           <div class="menu-title">Rincian Pengeluaran</div>
           <div class="menu-desc">Lihat semua pengeluaran</div>
+        </div>
+        <span class="menu-arrow">›</span>
+      </button>
+
+      <button class="menu-btn menu-neutral" onclick="goToStudentPayments()">
+        <span class="menu-icon">🎓</span>
+        <div class="menu-text">
+          <div class="menu-title">Log Bayar Siswa</div>
+          <div class="menu-desc">Riwayat pembayaran siswa</div>
         </div>
         <span class="menu-arrow">›</span>
       </button>
@@ -127,16 +126,36 @@
     </div>
     <div class="user-bar" id="userBarAdmin">👤 <span id="userNameAdmin">Admin</span></div>
 
-    <div class="admin-saldo-box">
-      <div class="admin-saldo-label">Saldo Tersedia</div>
-      <div class="admin-saldo-value" id="adminSaldo">Rp 0</div>
+    <!-- Supervisor read-only banner -->
+    <div class="info-banner hidden" id="supervisorBanner">
+      <span class="info-icon">👁️</span>
+      <p><strong>Mode Pengawas</strong> — Anda hanya dapat melihat laporan lengkap. Tidak dapat menambah atau menyetujui transaksi.</p>
     </div>
 
-    <div class="admin-tabs">
+    <!-- Admin Stats: Saldo, Pemasukan, Pengeluaran -->
+    <div class="admin-stats-grid">
+      <div class="admin-stat-card admin-stat-saldo">
+        <div class="admin-stat-label">Saldo Tersedia</div>
+        <div class="admin-stat-value" id="adminSaldo">Rp 0</div>
+      </div>
+      <div class="admin-stat-card admin-stat-pemasukan">
+        <div class="admin-stat-label">Total Pemasukan</div>
+        <div class="admin-stat-value" id="adminPemasukan">Rp 0</div>
+      </div>
+      <div class="admin-stat-card admin-stat-pengeluaran">
+        <div class="admin-stat-label">Total Pengeluaran</div>
+        <div class="admin-stat-value" id="adminPengeluaran">Rp 0</div>
+      </div>
+    </div>
+
+    <!-- Tabs -->
+    <div class="admin-tabs" id="adminTabs">
       <button class="tab-btn active" id="tabIncome" onclick="switchAdminTab('income')">Input Pemasukan</button>
+      <button class="tab-btn" id="tabExpense" onclick="switchAdminTab('expense')">Input Pengeluaran</button>
       <button class="tab-btn" id="tabApproval" onclick="switchAdminTab('approval')">Persetujuan</button>
     </div>
 
+    <!-- Tab: Input Pemasukan -->
     <div id="incomeTab" class="tab-content">
       <div class="form-box">
         <div class="input-block">
@@ -162,10 +181,52 @@
       </div>
     </div>
 
+    <!-- Tab: Input Pengeluaran (Admin) -->
+    <div id="expenseTab" class="tab-content hidden">
+      <div class="form-box">
+        <div class="input-block">
+          <label>ID Transaksi</label>
+          <div class="input-row">
+            <input type="text" id="adminExpenseId" readonly>
+            <button class="btn-icon btn-refresh" onclick="generateAdminExpenseId()">🔄</button>
+          </div>
+        </div>
+        <div class="input-block">
+          <label>Nama Transaksi</label>
+          <input type="text" id="adminExpenseNama" placeholder="Contoh: Beli ATK">
+        </div>
+        <div class="input-block">
+          <label>Diajukan oleh</label>
+          <select id="adminExpenseDiajukanOleh" onchange="onDiajukanOlehChange()">
+            <option value="">Memuat...</option>
+          </select>
+        </div>
+        <div class="input-block hidden" id="customDiajukanBlock">
+          <label>Nama Lainnya</label>
+          <input type="text" id="adminExpenseDiajukanCustom" placeholder="Masukkan nama pengaju">
+        </div>
+        <div class="input-block">
+          <label>Jumlah</label>
+          <input type="text" id="adminExpenseJumlah" placeholder="Rp.0" oninput="formatRupiahInput(this)">
+        </div>
+        <div class="input-block">
+          <label>Bukti Transaksi (Link)</label>
+          <input type="text" id="adminExpenseBukti" placeholder="https://drive.google.com/...">
+        </div>
+        <button class="btn-big btn-primary" onclick="recordAdminExpense()">Catat Pengeluaran</button>
+      </div>
+    </div>
+
+    <!-- Tab: Persetujuan -->
     <div id="approvalTab" class="tab-content hidden">
       <div class="section-head">Menunggu Persetujuan</div>
       <div id="pendingList" class="card-stack">
         <div class="empty-state">Tidak ada pengajuan menunggu</div>
+      </div>
+
+      <div class="section-head">Disetujui — Menunggu Konfirmasi Bayar</div>
+      <div id="approvedList" class="card-stack">
+        <div class="empty-state">Tidak ada yang menunggu konfirmasi bayar</div>
       </div>
 
       <div class="section-head">Sudah Diproses</div>
@@ -173,6 +234,11 @@
         <div class="empty-state">Belum ada riwayat proses</div>
       </div>
     </div>
+
+    <!-- FAB Laporan Lengkap -->
+    <button class="fab-report" onclick="openReportModal()" title="Laporan Lengkap">
+      <span>📊</span>
+    </button>
   </div>
 
   <!-- ═══ HISTORY ═══ -->
@@ -185,7 +251,7 @@
 
     <div class="info-banner">
       <span class="info-icon">ℹ️</span>
-      <p>Pengajuan yang <strong>disetujui</strong>, silakan temui koordinator untuk proses lebih lanjut.</p>
+      <p>Pengajuan yang <strong>dikonfirmasi</strong>, silakan temui koordinator untuk proses lebih lanjut.</p>
     </div>
 
     <div id="historyList" class="card-stack">
@@ -214,6 +280,53 @@
 
     <div id="expenseList" class="card-stack">
       <div class="empty-state">Belum ada pengeluaran</div>
+    </div>
+  </div>
+
+  <!-- ═══ LOG BAYAR SISWA ═══ -->
+  <div id="studentPaymentPage" class="page hidden">
+    <div class="topbar">
+      <button class="btn-icon" onclick="goLanding()">←</button>
+      <h2>Log Bayar Siswa</h2>
+      <div style="width:48px"></div>
+    </div>
+
+    <div class="form-box" style="padding-top:1rem; padding-bottom:0.5rem;">
+      <div class="input-block">
+        <input type="text" id="studentSearch" placeholder="🔍 Cari nama siswa..." oninput="filterStudentPayments()">
+      </div>
+    </div>
+
+    <div id="studentPaymentList" class="card-stack">
+      <div class="empty-state">Memuat...</div>
+    </div>
+  </div>
+
+  <!-- ═══ ADMIN FULL REPORT MODAL ═══ -->
+  <div id="reportModal" class="modal hidden">
+    <div class="modal-backdrop" onclick="closeReportModal()"></div>
+    <div class="modal-box" style="max-height:85vh; display:flex; flex-direction:column;">
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-shrink:0;">
+        <h3>Laporan Lengkap</h3>
+        <button class="btn-icon" onclick="closeReportModal()" style="width:32px; height:32px;">✕</button>
+      </div>
+      <div class="summary-bar" style="grid-template-columns:1fr 1fr 1fr; margin:0 0 1rem 0; flex-shrink:0;">
+        <div class="summary-item">
+          <div class="summary-label">Pemasukan</div>
+          <div class="summary-value" style="color:var(--green);" id="reportTotalIncome">Rp 0</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Pengeluaran</div>
+          <div class="summary-value" style="color:var(--red);" id="reportTotalExpense">Rp 0</div>
+        </div>
+        <div class="summary-item">
+          <div class="summary-label">Saldo</div>
+          <div class="summary-value" style="color:var(--primary);" id="reportBalance">Rp 0</div>
+        </div>
+      </div>
+      <div id="reportList" class="card-stack" style="overflow-y:auto; flex:1; min-height:0; gap:0.75rem;">
+        <div class="empty-state">Memuat...</div>
+      </div>
     </div>
   </div>
 
