@@ -1,29 +1,3 @@
-/* ═══════════════════════════════════════════════════
-   COLOR THEME OPTIONS
-   Uncomment ONE block, comment out the others
-   ═══════════════════════════════════════════════════ */
-
-/* ─── OPTION 1: Cool Corporate ─── */
-/*
-:root {
-  --primary: #3b82f6;
-  --primary-dark: #2563eb;
-  --green: #10b981;
-  --red: #ef4444;
-  --bg: #f8fafc;
-  --surface: #ffffff;
-  --text: #1e293b;
-  --text-light: #64748b;
-  --border: #e2e8f0;
-  --card-shadow: 0 1px 3px rgba(0,0,0,0.06);
-  --gradient-saldo: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-  --gradient-admin: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-  --radius: 16px;
-  --radius-sm: 12px;
-}
-*/
-
-/* ─── OPTION 2: Warm Professional (DEFAULT) ─── */
 /*
 :root {
   --primary: #059669;
@@ -41,11 +15,10 @@
   --radius: 16px;
   --radius-sm: 12px;
 }
-
 /* ─── OPTION 3: Dark Premium ─── */
 
 :root {
-  --primary: #1e293b;
+  --primary: #f59e0b;
   --primary-dark: #d97706;
   --green: #22c55e;
   --red: #ef4444;
@@ -81,62 +54,31 @@ body {
 .landing-top h1 { font-size: 1.5rem; font-weight: 700; }
 .landing-sub { color: var(--text-light); font-size: 0.875rem; margin-top: 0.25rem; }
 
-/* FAB Admin */
-.fab-admin {
-  position: fixed;
-  bottom: 1.5rem;
-  right: 1.5rem;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  border: none;
-  background: var(--text);
-  color: white;
-  font-size: 1.25rem;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  z-index: 50;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-.fab-admin:active {
-  transform: scale(0.92);
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-}
-
-/* Stats */
+/* Public Pengeluaran Stat (Landing) */
 .stat-big {
-  background: var(--gradient-saldo);
-  color: white;
-  margin: 0 1rem 1rem;
-  padding: 1.5rem;
-  border-radius: var(--radius);
-  text-align: center;
+  margin: 0 1rem 1rem; padding: 1.5rem;
+  border-radius: var(--radius); text-align: center;
   box-shadow: 0 10px 25px -5px rgba(0,0,0,0.15);
 }
 .stat-big-label { font-size: 0.875rem; opacity: 0.9; margin-bottom: 0.5rem; }
 .stat-big-value { font-size: 2rem; font-weight: 800; letter-spacing: -0.5px; }
 
-.stat-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-  margin: 0 1rem 1.5rem;
+.stat-red-public {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  color: white;
 }
-.stat-small {
-  padding: 1rem;
-  border-radius: var(--radius-sm);
-  text-align: center;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  box-shadow: var(--card-shadow);
+
+/* FAB Admin */
+.fab-admin {
+  position: fixed; bottom: 1.5rem; right: 1.5rem;
+  width: 56px; height: 56px; border-radius: 50%;
+  border: none; background: var(--text); color: white;
+  font-size: 1.25rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50; transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
 }
-.stat-green { border-left: 4px solid var(--green); }
-.stat-red { border-left: 4px solid var(--red); }
-.stat-small-label { font-size: 0.75rem; color: var(--text-light); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem; }
-.stat-small-value { font-size: 1.125rem; font-weight: 700; }
+.fab-admin:active { transform: scale(0.92); }
 
 /* Menu */
 .menu-list { display: flex; flex-direction: column; gap: 0.75rem; padding: 0 1rem; }
@@ -145,18 +87,12 @@ body {
   width: 100%; padding: 1.125rem 1.25rem;
   border: none; border-radius: var(--radius-sm);
   font-size: 1rem; text-align: left; cursor: pointer;
-  box-shadow: var(--card-shadow);
-  background: var(--surface);
-  color: var(--text);
-  border: 1px solid var(--border);
+  box-shadow: var(--card-shadow); background: var(--surface);
+  color: var(--text); border: 1px solid var(--border);
   transition: transform 0.1s;
 }
 .menu-btn:active { transform: scale(0.98); }
-.menu-primary {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
+.menu-primary { background: var(--primary); color: white; border-color: var(--primary); }
 .menu-neutral { background: var(--surface); color: var(--text); }
 .menu-icon { font-size: 1.5rem; width: 40px; text-align: center; }
 .menu-text { flex: 1; }
@@ -181,29 +117,43 @@ body {
 .btn-refresh { background: var(--bg); font-size: 1rem; }
 
 /* User Bar */
-.user-bar {
-  background: var(--bg);
-  padding: 0.625rem 1rem;
-  font-size: 0.875rem;
-  color: var(--text-light);
-  border-bottom: 1px solid var(--border);
+.user-bar { background: var(--bg); padding: 0.625rem 1rem; font-size: 0.875rem; color: var(--text-light); border-bottom: 1px solid var(--border); }
+
+/* Admin Stats Grid */
+.admin-stats-grid {
+  display: grid; grid-template-columns: 1fr;
+  gap: 0.75rem; margin: 1rem; padding: 1rem;
+  background: var(--surface); border-radius: var(--radius);
+  border: 1px solid var(--border); box-shadow: var(--card-shadow);
 }
+.admin-stat-card {
+  padding: 1rem; border-radius: var(--radius-sm); text-align: center;
+}
+.admin-stat-saldo {
+  background: var(--gradient-saldo); color: white;
+}
+.admin-stat-pemasukan {
+  background: #f0fdf4; border-left: 4px solid var(--green);
+}
+.admin-stat-pengeluaran {
+  background: #fef2f2; border-left: 4px solid var(--red);
+}
+.admin-stat-label { font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 0.25rem; opacity: 0.9; }
+.admin-stat-pemasukan .admin-stat-label,
+.admin-stat-pengeluaran .admin-stat-label { color: var(--text-light); }
+.admin-stat-value { font-size: 1.25rem; font-weight: 800; }
+.admin-stat-pemasukan .admin-stat-value { color: var(--green); }
+.admin-stat-pengeluaran .admin-stat-value { color: var(--red); }
 
 /* Admin Tabs */
-.admin-tabs {
-  display: flex; gap: 0.5rem; padding: 1rem;
-}
+.admin-tabs { display: flex; gap: 0.5rem; padding: 0 1rem 1rem; }
 .tab-btn {
-  flex: 1; padding: 0.75rem; border: none; border-radius: var(--radius-sm);
+  flex: 1; padding: 0.625rem 0.5rem; border: none; border-radius: var(--radius-sm);
   background: var(--surface); color: var(--text-light);
-  font-size: 0.875rem; font-weight: 700; cursor: pointer;
+  font-size: 0.8rem; font-weight: 700; cursor: pointer;
   border: 1.5px solid var(--border);
 }
-.tab-btn.active {
-  background: var(--primary);
-  color: white;
-  border-color: var(--primary);
-}
+.tab-btn.active { background: var(--primary); color: white; border-color: var(--primary); }
 
 /* Forms */
 .form-box { padding: 1.5rem 1rem; display: flex; flex-direction: column; gap: 1.25rem; }
@@ -223,22 +173,10 @@ body {
   width: 100%; padding: 1rem; border: none; border-radius: var(--radius-sm);
   font-size: 1rem; font-weight: 700; cursor: pointer; margin-top: 0.5rem;
 }
-.btn-primary {
-  background: var(--primary);
-  color: white;
-  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1);
-}
+.btn-primary { background: var(--primary); color: white; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); }
 .btn-primary:active { background: var(--primary-dark); }
 
-/* Admin Saldo */
-.admin-saldo-box {
-  background: var(--gradient-admin);
-  color: white; margin: 1rem; padding: 1.5rem;
-  border-radius: var(--radius); text-align: center;
-}
-.admin-saldo-label { font-size: 0.875rem; opacity: 0.8; }
-.admin-saldo-value { font-size: 1.75rem; font-weight: 800; margin-top: 0.25rem; }
-
+/* Section Head */
 .section-head {
   padding: 1.5rem 1rem 0.75rem;
   font-size: 0.875rem; font-weight: 700; text-transform: uppercase;
@@ -248,9 +186,8 @@ body {
 /* Summary Bar */
 .summary-bar {
   display: grid; grid-template-columns: 1fr 1fr; gap: 0.75rem;
-  margin: 1rem; padding: 1rem;
-  background: var(--surface); border-radius: var(--radius-sm);
-  border: 1px solid var(--border);
+  margin: 1rem; padding: 1rem; background: var(--surface);
+  border-radius: var(--radius-sm); border: 1px solid var(--border);
   box-shadow: var(--card-shadow);
 }
 .summary-item { text-align: center; }
@@ -261,10 +198,8 @@ body {
 /* Cards */
 .card-stack { display: flex; flex-direction: column; gap: 0.75rem; padding: 0 1rem; }
 .card {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-sm);
-  padding: 1rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: 1rem;
   box-shadow: var(--card-shadow);
 }
 .card-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem; }
@@ -355,3 +290,27 @@ body {
 .loading { position: fixed; inset: 0; background: rgba(255,255,255,0.9); display: flex; align-items: center; justify-content: center; z-index: 999; }
 .spinner { width: 40px; height: 40px; border: 3px solid var(--border); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
+
+.fab-report {
+  position: fixed; bottom: 1.5rem; right: 1.5rem;
+  width: 56px; height: 56px; border-radius: 50%;
+  border: none; background: #3b82f6; color: white;
+  font-size: 1.25rem; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 50; transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.fab-report:active { transform: scale(0.92); }
+
+/* Student Payment Grouping */
+.date-group { margin-bottom: 1.5rem; }
+.date-header {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--text-light);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  padding: 0 1rem 0.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 0.75rem;
+}
