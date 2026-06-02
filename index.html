@@ -166,8 +166,12 @@
         </div>
         <div class="input-block">
           <label>Bukti Foto</label>
-          <input type="file" id="incomeBuktiFoto" accept="image/*" onchange="handlePhotoUpload(this, 'incomeBukti')">
-          <small style="font-size:0.75rem; color:var(--text-light);">Ambil foto atau pilih dari galeri</small>
+          <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+            <button type="button" class="btn-action" onclick="triggerCamera('incomeBuktiFoto')" style="flex:1; background:var(--primary); color:white;">📷 Kamera</button>
+            <button type="button" class="btn-action" onclick="triggerGallery('incomeBuktiFoto')" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border);">🖼️ Galeri</button>
+          </div>
+          <input type="file" id="incomeBuktiFoto" accept="image/*" style="display:none;" onchange="handlePhotoUpload(this, 'incomeBukti')">
+          <small style="font-size:0.75rem; color:var(--text-light);">Pilih salah satu untuk mengunggah bukti</small>
         </div>
         <div class="input-block">
           <label>Atau Link Bukti</label>
@@ -207,8 +211,12 @@
         </div>
         <div class="input-block">
           <label>Bukti Foto</label>
-          <input type="file" id="adminExpenseBuktiFoto" accept="image/*" onchange="handlePhotoUpload(this, 'adminExpenseBukti')">
-          <small style="font-size:0.75rem; color:var(--text-light);">Ambil foto atau pilih dari galeri</small>
+          <div style="display:flex; gap:0.5rem; margin-bottom:0.5rem;">
+            <button type="button" class="btn-action" onclick="triggerCamera('adminExpenseBuktiFoto')" style="flex:1; background:var(--primary); color:white;">📷 Kamera</button>
+            <button type="button" class="btn-action" onclick="triggerGallery('adminExpenseBuktiFoto')" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border);">🖼️ Galeri</button>
+          </div>
+          <input type="file" id="adminExpenseBuktiFoto" accept="image/*" style="display:none;" onchange="handlePhotoUpload(this, 'adminExpenseBukti')">
+          <small style="font-size:0.75rem; color:var(--text-light);">Pilih salah satu untuk mengunggah bukti</small>
         </div>
         <div class="input-block">
           <label>Atau Link Bukti</label>
@@ -340,7 +348,11 @@
     <div class="modal-box">
       <h3>Konfirmasi Pembayaran</h3>
       <p style="font-size:0.875rem; color:var(--text-light); margin-bottom:1rem;">Unggah bukti foto setelah memberikan uang (opsional):</p>
-      <input type="file" id="confirmBuktiFoto" accept="image/*" style="margin-bottom:1rem;">
+      <div style="display:flex; gap:0.5rem; margin-bottom:1rem;">
+        <button type="button" class="btn-action" onclick="triggerCamera('confirmBuktiFoto')" style="flex:1; background:var(--primary); color:white;">📷 Kamera</button>
+        <button type="button" class="btn-action" onclick="triggerGallery('confirmBuktiFoto')" style="flex:1; background:var(--surface); color:var(--text); border:1px solid var(--border);">🖼️ Galeri</button>
+      </div>
+      <input type="file" id="confirmBuktiFoto" accept="image/*" style="display:none;" onchange="handlePhotoUpload(this, 'confirmBuktiLink')">
       <div class="input-block" style="margin-bottom:1rem;">
         <label>Atau Link Bukti</label>
         <input type="text" id="confirmBuktiLink" placeholder="https://...">
