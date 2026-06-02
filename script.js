@@ -1,8 +1,11 @@
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbzlPkZJaZhNQXLPRW8C0xWxB5WpbqqutIyW5rXq7JnvkgXyvxfbXnDKAVdARWNR82dUtw/exec';
+const GAS_URL = 'https://script.google.com/macros/s/AKfycbz0nTZE3SEQuoyBQVWI83du_9uDIpu3qZE5gbsqDQgvVVTNhw2CJvbnM460fjP5K03mzg/exec';
+const CLOUD_NAME = 'ddccvdnye';
+const UPLOAD_PRESET = 'audit_unsigned';
 
-let userList = [];      // stores users + WA numbers
-let adminLogData = [];  // stores last fetched log for WA lookup
+let userList = [];
+let adminLogData = [];
 let app = { user: null, mode: null, rejectId: null };
+let confirmPaymentId = null;
 
 const $ = id => document.getElementById(id);
 const pages = ['landingPage','loginPage','submitPage','adminPage','historyPage','expensePage','studentPaymentPage'];
@@ -15,8 +18,7 @@ function showPage(id) {
   const target = document.getElementById(id);
   if (target) target.classList.remove('hidden');
   window.scrollTo(0,0);
-  
-  // Load data AFTER page is visible
+
   if (id === 'historyPage') setTimeout(loadHistory, 50);
   if (id === 'expensePage') setTimeout(loadExpenseDetail, 50);
   if (id === 'studentPaymentPage') setTimeout(loadStudentPayments, 50);
@@ -31,13 +33,13 @@ function showToast(msg, type) {
   setTimeout(() => el.classList.remove('show'), 3000);
 }
 
-function showLoading() { 
+function showLoading() {
   const el = $('loading');
-  if (el) el.classList.remove('hidden'); 
+  if (el) el.classList.remove('hidden');
 }
-function hideLoading() { 
+function hideLoading() {
   const el = $('loading');
-  if (el) el.classList.add('hidden'); 
+  if (el) el.classList.add('hidden');
 }
 
 async function api(action, payload = {}) {
@@ -51,6 +53,14 @@ async function api(action, payload = {}) {
 /* ─── Landing ─── */
 document.addEventListener('DOMContentLoaded', () => {
   loadLandingStats();
+  const photoModal = $('photoModal');
+  if (photoModal) {
+    photoModal.addEventListener('click', (e) => {
+      if (e.target === photoModal || e.target.classList.contains('modal-backdrop')) {
+        closePhotoModal();
+      }
+    });
+  }
 });
 
 async function loadLandingStats() {
@@ -111,6 +121,7 @@ async function doLogin() {
     showToast('Error: ' + err.message, 'error');
   }
 }
+
 /* ─── Admin / Supervisor View Toggle ─── */
 function setupAdminView() {
   const tabs = $('adminTabs');
@@ -125,7 +136,7 @@ function setupSupervisorView() {
   const expenseTab = $('expenseTab');
   const approvalTab = $('approvalTab');
   const banner = $('supervisorBanner');
-  
+
   if (tabs) tabs.classList.add('hidden');
   if (incomeTab) incomeTab.classList.add('hidden');
   if (expenseTab) expenseTab.classList.add('hidden');
@@ -137,9 +148,16 @@ function doLogout() {
   app.user = null;
   app.mode = null;
   $('passwordInput').value = '';
-  // Reset view so next login starts clean
   setupAdminView();
   goLanding();
+}
+
+function requireAdmin() {
+  if (!app.user || app.user.role !== 'admin') {
+    showToast('Hanya admin yang dapat melakukan ini', 'error');
+    return false;
+  }
+  return true;
 }
 
 /* ─── Currency ─── */
@@ -157,6 +175,76 @@ function formatRupiah(num) {
   if (num === undefined || num === null) return 'Rp 0';
   return 'Rp.' + Math.round(num).toLocaleString('id-ID');
 }
+
+/* ─── Cloudinary Upload ─── */
+async function uploadToCloudinary(file, publicId) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', UPLOAD_PRESET);
+  formData.append('public_id', publicId);
+  //formData.append('overwrite', 'true');
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
+    method: 'POST',
+    body: formData
+  });
+  const data = await res.json();
+  if (data.error) throw new Error(data.error.message);
+  return data.secure_url;
+}
+
+async function handlePhotoUpload(input, targetId) {
+  const file = input.files[0];
+  if (!file) return;
+
+  const idField = input.closest('.form-box').querySelector('input[readonly]');
+  const publicId = idField ? idField.value : 'proof_' + Date.now();
+
+  showLoading();
+  try {
+    const url = await uploadToCloudinary(file, publicId);
+    $(targetId).value = url;
+    showToast('Foto berhasil diunggah!', 'success');
+  } catch (err) {
+    showToast('Gagal upload: ' + err.message, 'error');
+  } finally {
+    hideLoading();
+  }
+}
+
+/* ─── Photo Viewer Modal ─── */
+function openPhotoModal(url) {
+  const modal = $('photoModal');
+  const img = $('photoModalImg');
+  if (!modal || !img) return;
+  img.src = url;
+  modal.classList.remove('hidden');
+}
+
+function closePhotoModal() {
+  const modal = $('photoModal');
+  const img = $('photoModalImg');
+  if (modal) modal.classList.add('hidden');
+  if (img) img.src = '';
+}
+
+/* ─── Bukti Renderer ─── */
+function renderBukti(bukti) {
+  if (!bukti) return '';
+  
+  let thumbUrl = bukti;
+  if (bukti.includes('cloudinary.com')) {
+    thumbUrl = bukti.replace('/upload/', '/upload/w_400,q_auto,f_auto/');
+  }
+  
+  return `
+    <div style="margin-top:0.5rem;">
+      <img src="${thumbUrl}" style="max-width:100%; max-height:150px; border-radius:8px; object-fit:cover; cursor:pointer; display:block;" onclick="openPhotoModal('${bukti}')" alt="Bukti">
+    </div>
+    <button class="btn-action" onclick="openPhotoModal('${bukti}')" style="background:var(--primary); color:white; margin-top:0.5rem; font-size:0.75rem; padding:0.375rem 0.75rem;">📎 Lihat Bukti</button>
+  `;
+}
+
 /* ─── Users Dropdown ─── */
 async function loadUsers() {
   try {
@@ -198,6 +286,9 @@ async function generateId() {
 }
 
 async function submitTransaction() {
+  if (!app.user || app.user.role === 'supervisor') {
+    return showToast('Anda tidak memiliki izin untuk mengajukan', 'error');
+  }
   const id = $('idTransaksi').value.trim();
   const nama = $('namaTransaksi').value.trim();
   const jumlah = parseRupiah($('jumlahTransaksi').value);
@@ -229,20 +320,23 @@ async function submitTransaction() {
 
 /* ─── Admin: Tabs ─── */
 function switchAdminTab(tab) {
+  if (app.user && app.user.role === 'supervisor') {
+    return showToast('Pengawas hanya dapat melihat laporan lengkap', 'error');
+  }
   const tIncome = $('tabIncome');
   const tExpense = $('tabExpense');
   const tApproval = $('tabApproval');
   const cIncome = $('incomeTab');
   const cExpense = $('expenseTab');
   const cApproval = $('approvalTab');
-  
+
   if (tIncome) tIncome.classList.toggle('active', tab === 'income');
   if (tExpense) tExpense.classList.toggle('active', tab === 'expense');
   if (tApproval) tApproval.classList.toggle('active', tab === 'approval');
   if (cIncome) cIncome.classList.toggle('hidden', tab !== 'income');
   if (cExpense) cExpense.classList.toggle('hidden', tab !== 'expense');
   if (cApproval) cApproval.classList.toggle('hidden', tab !== 'approval');
-  
+
   if (tab === 'approval') loadAdminLists();
   if (tab === 'income') generateIncomeId();
   if (tab === 'expense') { generateAdminExpenseId(); loadUsers(); }
@@ -257,6 +351,7 @@ async function generateIncomeId() {
 }
 
 async function recordIncome() {
+  if (!requireAdmin()) return;
   const id = $('incomeId').value.trim();
   const nama = $('incomeNama').value.trim();
   const jumlah = parseRupiah($('incomeJumlah').value);
@@ -287,14 +382,16 @@ async function recordIncome() {
   }
 }
 
-/* ─── Admin: Record Pengeluaran (Auto-approve → Confirmed) ─── */
+/* ─── Admin: Record Pengeluaran ─── */
 async function generateAdminExpenseId() {
   try {
     const res = await api('getNextId');
     $('adminExpenseId').value = res.id;
   } catch (e) { showToast('Gagal generate ID', 'error'); }
 }
+
 async function recordAdminExpense() {
+  if (!requireAdmin()) return;
   const id = $('adminExpenseId').value.trim();
   const nama = $('adminExpenseNama').value.trim();
   const jumlah = parseRupiah($('adminExpenseJumlah').value);
@@ -360,13 +457,12 @@ async function loadAdminLists() {
   try {
     const log = await api('getLog');
     adminLogData = log;
-    
+
     const pending = log.filter(x => x.status === 'Submitted' && x.jenis === 'Pengeluaran');
     const approved = log.filter(x => x.status === 'Approved' && x.jenis === 'Pengeluaran');
     const confirmed = log.filter(x => x.status === 'Confirmed' && x.jenis === 'Pengeluaran');
     const rejected = log.filter(x => x.status === 'Rejected' && x.jenis === 'Pengeluaran');
 
-    // Pending
     const pEl = $('pendingList');
     if (pEl) {
       pEl.innerHTML = pending.length
@@ -374,7 +470,6 @@ async function loadAdminLists() {
         : '<div class="empty-state">Tidak ada pengajuan menunggu</div>';
     }
 
-    // Approved (waiting confirmation) — use existing DOM element
     const aEl = $('approvedList');
     if (aEl) {
       aEl.innerHTML = approved.length
@@ -382,7 +477,6 @@ async function loadAdminLists() {
         : '<div class="empty-state">Tidak ada yang menunggu konfirmasi bayar</div>';
     }
 
-    // Processed (Confirmed + Rejected)
     const procEl = $('processedList');
     if (procEl) {
       const processed = [...confirmed, ...rejected];
@@ -410,10 +504,9 @@ function renderAdminCard(item, status) {
         <button class="btn-action btn-reject" onclick="openRejectModal('${item.id}')">✕ Tolak</button>
       </div>`;
   } else if (status === 'approved') {
-    // FIXED: No more Tolak button here. Reject was only available at pending stage.
     actions = `
       <div class="card-actions">
-        <button class="btn-action btn-approve" onclick="confirmPayment('${item.id}')" style="background:#f59e0b;">💰 Konfirmasi Bayar</button>
+        <button class="btn-action btn-approve" onclick="openConfirmModal('${item.id}')" style="background:#f59e0b;">💰 Konfirmasi Bayar</button>
       </div>`;
     statusBadge = '<span class="status-badge status-approved">Disetujui — Menunggu Konfirmasi</span>';
   } else if (status === 'confirmed') {
@@ -434,19 +527,21 @@ function renderAdminCard(item, status) {
       ${statusBadge}
       ${actions}
       ${item.reason ? `<div class="reason-box"><strong>Alasan Penolakan:</strong> ${item.reason}</div>` : ''}
+      ${(status === 'confirmed') ? renderBukti(item.bukti) : ''}
     </div>
   `;
 }
 
 async function approvePending(id) {
+  if (!requireAdmin()) return;
   const item = adminLogData.find(x => x.id === id);
-  
+
   showLoading();
   try {
     const res = await api('approvePending', { id, petugas: app.user.name });
     hideLoading();
     if (res.error) return showToast(res.error, 'error');
-    
+
     showToast('Disetujui! Menunggu konfirmasi bayar.', 'success');
     if (item) sendWaNotification(item, 'approved');
     loadAdminLists();
@@ -456,13 +551,47 @@ async function approvePending(id) {
   }
 }
 
-async function confirmPayment(id) {
+/* ─── Confirm Payment Modal ─── */
+function openConfirmModal(id) {
+  confirmPaymentId = id;
+  $('confirmBuktiFoto').value = '';
+  $('confirmBuktiLink').value = '';
+  $('confirmModal').classList.remove('hidden');
+}
+
+function closeConfirmModal() {
+  confirmPaymentId = null;
+  $('confirmModal').classList.add('hidden');
+}
+
+async function doConfirmPayment() {
+  if (!requireAdmin()) return;
+  const file = $('confirmBuktiFoto').files[0];
+  let bukti = $('confirmBuktiLink').value.trim();
+
+  if (file && !bukti) {
+    showLoading();
+    try {
+      const url = await uploadToCloudinary(file, confirmPaymentId);
+      hideLoading();
+      bukti = url;
+    } catch (err) {
+      hideLoading();
+      return showToast('Error upload: ' + err.message, 'error');
+    }
+  }
+
   showLoading();
   try {
-    const res = await api('confirmPayment', { id, petugas: app.user.name });
+    const res = await api('confirmPayment', {
+      id: confirmPaymentId,
+      petugas: app.user.name,
+      bukti
+    });
     hideLoading();
     if (res.error) return showToast(res.error, 'error');
     showToast('Pembayaran dikonfirmasi! Saldo diperbarui.', 'success');
+    closeConfirmModal();
     loadAdminLists();
     loadAdminStats();
   } catch (err) {
@@ -484,6 +613,7 @@ function closeRejectModal() {
 }
 
 async function confirmReject() {
+  if (!requireAdmin()) return;
   const reason = $('rejectReason').value.trim();
   if (!reason) return showToast('Masukkan alasan penolakan', 'error');
 
@@ -494,7 +624,7 @@ async function confirmReject() {
     const res = await api('rejectTransaction', { id: app.rejectId, petugas: app.user.name, reason });
     hideLoading();
     if (res.error) return showToast(res.error, 'error');
-    
+
     showToast('Ditolak.', 'success');
     if (item) sendWaNotification(item, 'rejected', reason);
     closeRejectModal();
@@ -512,22 +642,21 @@ async function loadHistory() {
     console.error('historyList element not found');
     return;
   }
-  
+
   el.innerHTML = '<div class="empty-state">Memuat...</div>';
-  
+
   try {
     const log = await api('getLog');
     console.log('History raw data:', log);
-    
+
     if (!Array.isArray(log)) {
       el.innerHTML = '<div class="empty-state">Gagal memuat data</div>';
       return;
     }
-    
-    // Filter: only Pengeluaran
+
     const pengeluaranOnly = log.filter(x => x.jenis === 'Pengeluaran');
     console.log('Filtered pengeluaran:', pengeluaranOnly);
-    
+
     if (!pengeluaranOnly.length) {
       el.innerHTML = '<div class="empty-state">Belum ada pengajuan</div>';
       return;
@@ -537,7 +666,7 @@ async function loadHistory() {
       const amountClass = 'amount-out';
       const sign = '-';
       const jenisClass = 'jenis-out';
-      
+
       let footer = '';
       if (item.status === 'Confirmed') {
         footer = `<div class="coordinator-msg">✅ Dikonfirmasi</div>`;
@@ -559,10 +688,11 @@ async function loadHistory() {
           <div class="card-meta">${item.diajukanOleh} • ${new Date(item.timestamp).toLocaleDateString('id-ID')}</div>
           <div class="card-amount ${amountClass}">${sign}${formatRupiah(item.jumlah)}</div>
           ${footer}
+          ${(item.status === 'Confirmed') ? renderBukti(item.bukti) : ''}
         </div>
       `;
     }).join('');
-  } catch (e) { 
+  } catch (e) {
     console.error('History error:', e);
     el.innerHTML = '<div class="empty-state">Error memuat data</div>';
   }
@@ -573,26 +703,26 @@ async function loadExpenseDetail() {
   const el = $('expenseList');
   const totalEl = $('expenseTotal');
   const countEl = $('expenseCount');
-  
+
   if (!el || !totalEl || !countEl) {
     console.error('Expense elements missing:', { el: !!el, totalEl: !!totalEl, countEl: !!countEl });
     return;
   }
-  
+
   el.innerHTML = '<div class="empty-state">Memuat...</div>';
-  
+
   try {
     const master = await api('getMaster');
     console.log('Master raw data:', master);
-    
+
     if (!Array.isArray(master)) {
       el.innerHTML = '<div class="empty-state">Gagal memuat data</div>';
       return;
     }
-    
+
     const expenses = master.filter(x => x.jenis === 'Pengeluaran');
     console.log('Filtered expenses:', expenses);
-    
+
     const total = expenses.reduce((sum, x) => sum + (parseFloat(x.jumlah) || 0), 0);
     totalEl.textContent = formatRupiah(total);
     countEl.textContent = expenses.length;
@@ -611,92 +741,12 @@ async function loadExpenseDetail() {
         <div class="card-title">${item.transaksi}</div>
         <div class="card-meta">Diajukan oleh: ${item.diajukanOleh} • Disetujui: ${item.petugas || '-'}</div>
         <div class="card-amount amount-out">-${formatRupiah(item.jumlah)}</div>
+        ${renderBukti(item.bukti)}
       </div>
     `).join('');
-  } catch (e) { 
+  } catch (e) {
     console.error('Expense error:', e);
     el.innerHTML = '<div class="empty-state">Error memuat data</div>';
-  }
-}
-
-// Enter key on password
-document.addEventListener('DOMContentLoaded', () => {
-  const pwd = $('passwordInput');
-  if (pwd) {
-    pwd.addEventListener('keypress', e => { 
-      if (e.key === 'Enter') doLogin(); 
-    });
-  }
-});
-
-/* ─── Admin Full Report Modal ─── */
-function openReportModal() {
-  const modal = $('reportModal');
-  if (modal) {
-    modal.classList.remove('hidden');
-    loadAdminReport();
-  }
-}
-
-function closeReportModal() {
-  const modal = $('reportModal');
-  if (modal) modal.classList.add('hidden');
-}
-
-async function loadAdminReport() {
-  const listEl = $('reportList');
-  const incomeEl = $('reportTotalIncome');
-  const expenseEl = $('reportTotalExpense');
-  const balanceEl = $('reportBalance');
-  
-  if (!listEl) return;
-  listEl.innerHTML = '<div class="empty-state">Memuat...</div>';
-  
-  try {
-    const master = await api('getMaster');
-    if (!Array.isArray(master)) {
-      listEl.innerHTML = '<div class="empty-state">Gagal memuat data</div>';
-      return;
-    }
-    
-    let totalIncome = 0, totalExpense = 0;
-    master.forEach(t => {
-      const val = parseFloat(t.jumlah) || 0;
-      if (t.jenis === 'Pemasukan') totalIncome += val;
-      else if (t.jenis === 'Pengeluaran') totalExpense += val;
-    });
-    
-    if (incomeEl) incomeEl.textContent = formatRupiah(totalIncome);
-    if (expenseEl) expenseEl.textContent = formatRupiah(totalExpense);
-    if (balanceEl) balanceEl.textContent = formatRupiah(totalIncome - totalExpense);
-    
-    if (!master.length) {
-      listEl.innerHTML = '<div class="empty-state">Belum ada transaksi</div>';
-      return;
-    }
-    
-    listEl.innerHTML = master.slice().reverse().map(item => {
-      const isOut = item.jenis === 'Pengeluaran';
-      const amountClass = isOut ? 'amount-out' : 'amount-in';
-      const sign = isOut ? '-' : '+';
-      const jenisClass = isOut ? 'jenis-out' : 'jenis-in';
-      
-      return `
-        <div class="card">
-          <div class="card-header">
-            <span class="card-id">${item.id}</span>
-            <span class="card-jenis ${jenisClass}">${item.jenis}</span>
-          </div>
-          <div class="card-title">${item.transaksi}</div>
-          <div class="card-meta">Diajukan: ${item.diajukanOleh || '-'} • Petugas: ${item.petugas || '-'}</div>
-          <div class="card-amount ${amountClass}">${sign}${formatRupiah(item.jumlah)}</div>
-          <div style="font-size:0.75rem; color:var(--text-light); margin-top:0.5rem;">Running Balance: ${formatRupiah(item.balance)}</div>
-        </div>
-      `;
-    }).join('');
-  } catch (e) {
-    console.error('Report error:', e);
-    listEl.innerHTML = '<div class="empty-state">Error memuat data</div>';
   }
 }
 
@@ -729,17 +779,12 @@ function renderStudentPayments(data) {
     return;
   }
 
-  // Sort newest first
   const sorted = [...data].sort((a, b) => new Date(b.tanggal) - new Date(a.tanggal));
-
-  // Group by local date
   const groups = {};
   sorted.forEach(item => {
     const d = new Date(item.tanggal);
     const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
-    const label = d.toLocaleDateString('id-ID', {
-      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
-    });
+    const label = d.toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
     if (!groups[key]) groups[key] = { label, items: [] };
     groups[key].items.push(item);
   });
@@ -771,6 +816,78 @@ function filterStudentPayments() {
   renderStudentPayments(filtered);
 }
 
+/* ─── Admin Full Report Modal ─── */
+function openReportModal() {
+  const modal = $('reportModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    loadAdminReport();
+  }
+}
+
+function closeReportModal() {
+  const modal = $('reportModal');
+  if (modal) modal.classList.add('hidden');
+}
+
+async function loadAdminReport() {
+  const listEl = $('reportList');
+  const incomeEl = $('reportTotalIncome');
+  const expenseEl = $('reportTotalExpense');
+  const balanceEl = $('reportBalance');
+
+  if (!listEl) return;
+  listEl.innerHTML = '<div class="empty-state">Memuat...</div>';
+
+  try {
+    const master = await api('getMaster');
+    if (!Array.isArray(master)) {
+      listEl.innerHTML = '<div class="empty-state">Gagal memuat data</div>';
+      return;
+    }
+
+    let totalIncome = 0, totalExpense = 0;
+    master.forEach(t => {
+      const val = parseFloat(t.jumlah) || 0;
+      if (t.jenis === 'Pemasukan') totalIncome += val;
+      else if (t.jenis === 'Pengeluaran') totalExpense += val;
+    });
+
+    if (incomeEl) incomeEl.textContent = formatRupiah(totalIncome);
+    if (expenseEl) expenseEl.textContent = formatRupiah(totalExpense);
+    if (balanceEl) balanceEl.textContent = formatRupiah(totalIncome - totalExpense);
+
+    if (!master.length) {
+      listEl.innerHTML = '<div class="empty-state">Belum ada transaksi</div>';
+      return;
+    }
+
+    listEl.innerHTML = master.slice().reverse().map(item => {
+      const isOut = item.jenis === 'Pengeluaran';
+      const amountClass = isOut ? 'amount-out' : 'amount-in';
+      const sign = isOut ? '-' : '+';
+      const jenisClass = isOut ? 'jenis-out' : 'jenis-in';
+
+      return `
+        <div class="card">
+          <div class="card-header">
+            <span class="card-id">${item.id}</span>
+            <span class="card-jenis ${jenisClass}">${item.jenis}</span>
+          </div>
+          <div class="card-title">${item.transaksi}</div>
+          <div class="card-meta">Diajukan: ${item.diajukanOleh || '-'} • Petugas: ${item.petugas || '-'}</div>
+          <div class="card-amount ${amountClass}">${sign}${formatRupiah(item.jumlah)}</div>
+          <div style="font-size:0.75rem; color:var(--text-light); margin-top:0.5rem;">Running Balance: ${formatRupiah(item.balance)}</div>
+          ${renderBukti(item.bukti)}
+        </div>
+      `;
+    }).join('');
+  } catch (e) {
+    console.error('Report error:', e);
+    listEl.innerHTML = '<div class="empty-state">Error memuat data</div>';
+  }
+}
+
 /* ─── WhatsApp Notification ─── */
 function formatWaNumber(phone) {
   let num = phone.toString().replace(/\D/g, '');
@@ -795,7 +912,6 @@ function sendWaNotification(item, status, reason) {
   const num = formatWaNumber(user.phone);
   const url = `https://wa.me/${num}?text=${encodeURIComponent(message)}`;
 
-  // Open via invisible link (more reliable than window.open after async)
   const a = document.createElement('a');
   a.href = url;
   a.target = '_blank';
@@ -806,3 +922,13 @@ function sendWaNotification(item, status, reason) {
     if (a.parentNode) document.body.removeChild(a);
   }, 100);
 }
+
+// Enter key on password
+document.addEventListener('DOMContentLoaded', () => {
+  const pwd = $('passwordInput');
+  if (pwd) {
+    pwd.addEventListener('keypress', e => {
+      if (e.key === 'Enter') doLogin();
+    });
+  }
+});
