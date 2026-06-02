@@ -176,13 +176,28 @@ function formatRupiah(num) {
   return 'Rp.' + Math.round(num).toLocaleString('id-ID');
 }
 
+/* ─── Camera / Gallery Triggers ─── */
+function triggerCamera(inputId) {
+  const input = $(inputId);
+  if (!input) return;
+  input.setAttribute('capture', 'environment');
+  input.click();
+  setTimeout(() => input.removeAttribute('capture'), 1000);
+}
+
+function triggerGallery(inputId) {
+  const input = $(inputId);
+  if (!input) return;
+  input.removeAttribute('capture');
+  input.click();
+}
+
 /* ─── Cloudinary Upload ─── */
 async function uploadToCloudinary(file, publicId) {
   const formData = new FormData();
   formData.append('file', file);
   formData.append('upload_preset', UPLOAD_PRESET);
   formData.append('public_id', publicId);
-  //formData.append('overwrite', 'true');
 
   const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/image/upload`, {
     method: 'POST',
