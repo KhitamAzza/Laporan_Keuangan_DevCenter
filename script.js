@@ -96,7 +96,7 @@ async function doLogin() {
     if (app.mode === 'admin' && res.role !== 'admin' && res.role !== 'supervisor') {
       return showToast('Hanya admin yang bisa masuk', 'error');
     }
-    if (app.mode === 'staff' && res.role !== 'staff') {
+    if (app.mode === 'staff' && res.role.trim().toLowerCase() !== 'petugas') {
       return showToast('Hanya pembina yang bisa mengajukan', 'error');
     }
 
@@ -913,29 +913,22 @@ function formatWaNumber(phone) {
 function sendWaNotification(item, status, reason) {
   const user = userList.find(u => u.name === item.diajukanOleh);
   if (!user || !user.phone) {
-    showToast(`Nomor WA untuk ${item.diajukanOleh} tidak ditemukan. Notifikasi tidak terkirim.`, 'error');
+    showToast(`Nomor WA untuk ${item.diajukanOleh} tidak ditemukan`, 'error');
     return;
   }
 
   let message = '';
   if (status === 'approved') {
-    message = `Assalamu'alaikum ${item.diajukanOleh}, pengajuan anda ${item.transaksi} telah disetujui. Silakan hubungi koordinator.`;
+    message = `Assalamu'alaikum ${item.diajukanOleh}, pengajuan anda *${item.transaksi}* telah *DISETUJUI*. Silakan hubungi koordinator untuk proses lebih lanjut.`;
   } else if (status === 'rejected') {
-    message = `Assalamu'alaikum ${item.diajukanOleh}, pengajuan anda ${item.transaksi} ditolak. Alasan: ${reason || 'Tidak ada alasan'}.`;
+    message = `Assalamu'alaikum ${item.diajukanOleh}, pengajuan anda *${item.transaksi}* *DITOLAK*. Alasan: ${reason || 'Tidak ada alasan'}.`;
   }
 
   const num = formatWaNumber(user.phone);
   const url = `https://wa.me/${num}?text=${encodeURIComponent(message)}`;
-
-  const a = document.createElement('a');
-  a.href = url;
-  a.target = '_blank';
-  a.rel = 'noopener noreferrer';
-  document.body.appendChild(a);
-  a.click();
-  setTimeout(() => {
-    if (a.parentNode) document.body.removeChild(a);
-  }, 100);
+  
+  window.open(url, '_blank');
+  showToast('WhatsApp dibuka!', 'success');
 }
 
 // Enter key on password
