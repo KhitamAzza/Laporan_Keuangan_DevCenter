@@ -266,6 +266,8 @@ body {
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
   overscroll-behavior: contain;
+  display: flex;
+  flex-direction: column;
 }
 @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
 .modal-box h3 { margin-bottom: 1rem; font-size: 1.125rem; color: var(--text); }
