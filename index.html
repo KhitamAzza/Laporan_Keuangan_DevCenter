@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Sistem Audit Keuangan</title>
   <link rel="stylesheet" href="style.css">
+<base target="_blank">
 </head>
 <body>
 
@@ -317,26 +318,26 @@
   <!-- ═══ ADMIN FULL REPORT MODAL ═══ -->
   <div id="reportModal" class="modal hidden">
     <div class="modal-backdrop" onclick="closeReportModal()"></div>
-    <div class="modal-box" style="display:flex; flex-direction:column;">
-      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-shrink:0;">
-        <h3>Laporan Lengkap</h3>
+    <div class="modal-box" style="padding:0; overflow:hidden;">
+      <div style="display:flex; justify-content:space-between; align-items:center; padding:1.25rem 1.5rem 0.75rem; flex-shrink:0; position:sticky; top:0; background:var(--surface); z-index:5; border-bottom:1px solid var(--border);">
+        <h3 style="margin:0;">Laporan Lengkap</h3>
         <button class="btn-icon" onclick="closeReportModal()" style="width:32px; height:32px;">✕</button>
       </div>
-      <div class="summary-bar" style="grid-template-columns:1fr 1fr 1fr; margin:0 0 1rem 0; flex-shrink:0;">
+      <div class="summary-bar" style="grid-template-columns:repeat(3, 1fr); margin:0.75rem 1rem; padding:0.75rem; flex-shrink:0;">
         <div class="summary-item">
           <div class="summary-label">Pemasukan</div>
-          <div class="summary-value" style="color:var(--green);" id="reportTotalIncome">Rp 0</div>
+          <div class="summary-value" style="color:var(--green); font-size:1rem;" id="reportTotalIncome">Rp 0</div>
         </div>
         <div class="summary-item">
           <div class="summary-label">Pengeluaran</div>
-          <div class="summary-value" style="color:var(--red);" id="reportTotalExpense">Rp 0</div>
+          <div class="summary-value" style="color:var(--red); font-size:1rem;" id="reportTotalExpense">Rp 0</div>
         </div>
         <div class="summary-item">
           <div class="summary-label">Saldo</div>
-          <div class="summary-value" style="color:var(--primary);" id="reportBalance">Rp 0</div>
+          <div class="summary-value" style="color:var(--primary); font-size:1rem;" id="reportBalance">Rp 0</div>
         </div>
       </div>
-      <div id="reportList" class="card-stack" style="overflow-y:auto; flex:1; min-height:0; gap:0.75rem;">
+      <div id="reportList" class="card-stack" style="overflow-y:auto; flex:1; min-height:0; gap:0.75rem; padding:0 1rem 1.5rem;">
         <div class="empty-state">Memuat...</div>
       </div>
     </div>
