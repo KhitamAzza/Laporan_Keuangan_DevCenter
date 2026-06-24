@@ -106,7 +106,9 @@
       </div>
       <div class="input-block">
         <label>Jumlah</label>
-        <input type="text" id="jumlahTransaksi" placeholder="Rp.0" oninput="formatRupiahInput(this)">
+        <input type="text" id="jumlahTransaksi" placeholder="Rp.0" 
+       inputmode="numeric" pattern="[0-9]*"
+       oninput="formatRupiahInput(this)">
       </div>
       <div class="input-block">
         <label>Bukti Transaksi (Link)</label>
@@ -180,7 +182,9 @@
         </div>
         <div class="input-block">
           <label>Jumlah</label>
-          <input type="text" id="incomeJumlah" placeholder="Rp.0" oninput="formatRupiahInput(this)">
+          <input type="text" id="incomeJumlah" placeholder="Rp.0" 
+       inputmode="numeric" pattern="[0-9]*"
+       oninput="formatRupiahInput(this)">
         </div>
         <button class="btn-big btn-primary" onclick="recordIncome()">Catat Pemasukan</button>
       </div>
@@ -225,7 +229,9 @@
         </div>
         <div class="input-block">
           <label>Jumlah</label>
-          <input type="text" id="adminExpenseJumlah" placeholder="Rp.0" oninput="formatRupiahInput(this)">
+          <input type="text" id="adminExpenseJumlah" placeholder="Rp.0" 
+       inputmode="numeric" pattern="[0-9]*"
+       oninput="formatRupiahInput(this)">
         </div>
         <button class="btn-big btn-primary" onclick="recordAdminExpense()">Catat Pengeluaran</button>
       </div>
